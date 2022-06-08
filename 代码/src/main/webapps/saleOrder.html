@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>已售订单</title>
+    <style>
+        .demo-table-expand {
+            font-size: 0;
+        }
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+        .demo-table-expand .el-form-item {
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+
+    <el-row>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="4">
+            <span style="font-size: 18px;color: cornflowerblue"><i class="el-icon-shopping-cart-full"></i>{{user.name}}店铺的已售订单</span>
+        </el-col>
+        <el-col :span="17">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="2">
+            <el-dropdown class="grid-content">
+                <el-button type="primary" icon="el-icon-user">
+                    我的店铺<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item icon="el-icon-house" @click.native="myAccount">我的店铺主页</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myProduct">我的商品</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-search" @click.native="myOrder" disabled>查看订单</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-switch-button" @click.native="quit" disabled>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-col>
+
+    </el-row>
+
+    <el-table
+            :data="orders"
+            style="width: 100%">
+
+        <el-table-column
+                label="订单时间"
+                prop="orderTime"
+                width="200"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="商品id"
+                prop="userId"
+                width="100"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="收货人"
+                prop="receiverName">
+        </el-table-column>
+        <el-table-column
+                label="收货地址"
+                prop="receiverAddress">
+        </el-table-column>
+        <el-table-column
+                label="收货电话"
+                prop="receiverPhone">
+        </el-table-column>
+        <el-table-column label="数量" prop="payState" width="100">
+        </el-table-column>
+        <el-table-column label="总金额" prop="money" width="100">
+        </el-table-column>
+    </el-table>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "post",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "" && this.user.role === "sale") {
+                    this.selectAll();
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            selectAll() {
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/order/selectBySaleId"
+                }).then(resp => {
+                    // 设置表格数据
+                    this.orders = resp.data;
+                });
+            },
+            myAccount() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/myAccount.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myProduct() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/sale.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/saleOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            editMyInformation() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/edit.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+        },
+
+        data() {
+            return {
+                user: {
+
+                },
+                orders: []
+            }
+        }
+    })
+</script>
+</body>
+</html>

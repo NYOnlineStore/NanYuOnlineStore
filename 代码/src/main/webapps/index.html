@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>南鱼网上商城</title>
+
+    <style>
+        .time {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .bottom {
+            margin-top: 13px;
+            line-height: 12px;
+        }
+
+        .button {
+            padding: 0;
+            float: right;
+        }
+
+        .image {
+            width: 100%;
+            display: block;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+
+        .clearfix:after {
+            clear: both
+        }
+
+        .el-row {
+            margin-bottom: 20px;
+        }
+        .el-col {
+            border-radius: 4px;
+        }
+        .bg-purple-dark {
+            background: #99a9bf;
+        }
+        .bg-purple {
+            background: #d3dce6;
+        }
+        .bg-purple-light {
+            background: #e5e9f2;
+        }
+        .green-success {
+            color: #67C23A;
+        }
+        .grid-content {
+            border-radius: 4px;
+            text-align:center;
+            font-size:20px;
+            padding-top:8px;
+        }
+        .row-bg {
+            padding: 10px 0;
+            background-color: #f9fafc;
+        }
+
+        .el-dropdown {
+            vertical-align: top;
+        }
+        .el-dropdown + .el-dropdown {
+            margin-left: 15px;
+        }
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+
+        .el-select .el-input {
+            width: 130px;
+        }
+        .input-with-select .el-input-group__prepend {
+            background-color: #fff;
+        }
+        .goods-main {
+            width: 95%;
+            margin:auto auto;
+        }
+        .two-rows{
+            overflow:hidden;
+            text-overflow:ellipsis;
+            display:-webkit-box;
+            -webkit-box-orient:vertical;
+            -webkit-line-clamp:2;
+        }
+
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-menu>
+        <el-row style="height: 30px">
+            <el-col :span="2"><div class="grid-content">
+                <el-link href="/nanyu-onlinestore" style="font-size: 20px" type="primary" icon="el-icon-goods">首页</el-link>
+            </div></el-col>
+            <el-col :span="3"><div class="grid-content" style="padding-top:15px; font-size: 18px;">
+                {{userName}}
+            </div></el-col>
+            <el-col :span="1"><div class="grid-content">
+                <el-divider direction="vertical"></el-divider>
+            </div></el-col>
+            <el-col :span="3"><div class="grid-content">
+                <el-link href="/nanyu-onlinestore/login.html" type="success" style="font-size: 20px">登录</el-link>
+                <el-divider direction="vertical"></el-divider>
+                <el-link href="/nanyu-onlinestore/register.html" type="primary" style="font-size: 20px">注册</el-link>
+                <el-divider direction="vertical"></el-divider>
+                <el-link href="/nanyu-onlinestore/active.html" type="warning" style="font-size: 20px">激活</el-link>
+            </div></el-col>
+            <el-col :span="1"><div class="grid-content">
+                <el-divider direction="vertical"></el-divider>
+            </div></el-col>
+            <el-col :span="11"><div class="grid-content">
+                <div style="margin-bottom: 13px;">
+                    <el-input placeholder="请输入内容" v-model="search" class="input-with-select">
+                        <el-select v-model="goodsType" slot="prepend" placeholder="请选择">
+                            <el-option
+                                    v-for="item in options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                        <el-button slot="append" icon="el-icon-search" @click.native="selectByCondition"></el-button>
+                    </el-input>
+                </div>
+            </div></el-col>
+            <el-col :span="1"><div class="grid-content">
+                <el-divider direction="vertical"></el-divider>
+            </div></el-col>
+            <el-col :span="2">
+                <el-dropdown class="grid-content">
+                    <el-button type="primary" icon="el-icon-user">
+                        我的<i class="el-icon-arrow-down el-icon--right"></i>
+                    </el-button>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item icon="el-icon-house" @click.native="myAccount">我的账户</el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myCart">购物车</el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-search" @click.native="myOrder">我的订单</el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-switch-button" @click.native="quit">用户退出</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+            </el-col>
+        </el-row>
+    </el-menu>
+
+    <template>
+        <el-tabs v-model="activeName" type="card" @tab-click="menuClick" stretch="stretch" class="goods-main">
+            <el-tab-pane label="全部商品" name=""><!--全部商品--></el-tab-pane>
+            <el-tab-pane label="美食" name="food"><!--美食--></el-tab-pane>
+            <el-tab-pane label="饮料" name="drink"><!--饮料--></el-tab-pane>
+            <el-tab-pane label="玩具" name="toy"><!--玩具--></el-tab-pane>
+            <el-tab-pane label="家电" name="appliances"><!--家电--></el-tab-pane>
+            <el-tab-pane label="厨具" name="kitchenware"><!--厨具--></el-tab-pane>
+            <el-tab-pane label="鲜花" name="flower"><!--鲜花--></el-tab-pane>
+            <el-tab-pane label="文具" name="stationery"><!--文具--></el-tab-pane>
+            <el-tab-pane label="图书" name="book"><!--图书--></el-tab-pane>
+            <el-tab-pane label="汽车" name="car"><!--汽车--></el-tab-pane>
+            <el-tab-pane label="数码" name="digital"><!--数码--></el-tab-pane>
+            <el-tab-pane label="手机" name="phone"><!--手机--></el-tab-pane>
+            <el-tab-pane label="电脑" name="computer"><!--电脑--></el-tab-pane>
+            <el-tab-pane label="背包" name="backpack"><!--背包--></el-tab-pane>
+        </el-tabs>
+    </template>
+
+    <el-row class="goods-main">
+        <el-col :span="4" v-for="(product, index) in products" :key="product">
+            <el-card :body-style="{ padding: '10px'}" shadow="hover">
+                 <img :src=product.imgurl @click="detailOfProduct(product.id)" style="height: 243px" onerror="this.src='products/error_images.jpg;this.onerror=null'"class="image">
+                <div style="padding: 14px; font-size: 14px; height:90px;" >
+                    <span class="two-rows">商品名称：{{product.name}}</span><br>
+                    <div class="bottom clearfix">
+                        <span>售价：{{product.price}}</span>
+<!--                        <el-link :underline="false" v-bind:href = "['/nanyu-onlinestore/detail.html?id='+product.id]">-->
+<!--                            <el-button size="mini" class="button" round >详情</el-button>-->
+<!--                        </el-link>-->
+                        <el-button size="mini" class="button" round @click="detailOfProduct(product.id)">详情</el-button>
+                    </div>
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+
+    <el-divider></el-divider>
+
+    <!--分页工具条-->
+    <el-pagination
+            style="text-align:center;"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[6, 12, 18, 24]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalCount">
+    </el-pagination>
+
+    <el-divider></el-divider>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "post",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "") {
+                    this.userName = this.user.name;
+                }
+            });
+            let params = new URL(location.href).searchParams;
+            this.product.category = params.get('category');
+            this.goodsType=this.product.category;
+            if (params.get('currentPage') !== null && params.get("currentPage").toString() !== "") {
+                this.currentPage = parseInt(params.get("currentPage").toString());
+            }
+            if (params.get('pageSize') !== null && params.get('pageSize').toString() !== "") {
+                this.pageSize = params.get("pageSize").toString();
+            }
+            /*if (params.get('login') !== null && params.get('login').toString() !== "") {
+                this.login = params.get("login").toString();
+            }
+            if (this.login === "false") {
+                this.$message.error('您还没有登录，请先登录!');
+            }*/
+            if (window.location.search === "") {
+                this.selectByRandom();
+            } else {
+                this.selectAll();
+            }
+        },
+
+        methods: {
+            selectByRandom() {
+                axios({
+                    method: "post",
+                    url: "/nanyu-onlinestore/product/selectByRandom?pageSize=" + this.pageSize,
+                }).then(resp => {
+                    // 设置表格数据
+                    this.products=resp.data.rows;
+                    // 设置总记录数
+                    this.totalCount = resp.data.totalCount;
+                    this.currentPage=resp.data.currentPage;
+                    this.pageSize=resp.data.pageSize;
+                });
+            },
+            // 查询分页数据
+            selectAll() {
+                axios({
+                    method: "post",
+                    url: "/nanyu-onlinestore/product/selectByPageAndCondition?currentPage=" + this.currentPage + "&pageSize=" + this.pageSize,
+                    data: this.product
+                }).then(resp => {
+                    // 设置表格数据
+                    this.products=resp.data.rows;
+                    // 设置总记录数
+                    this.totalCount = resp.data.totalCount;
+                    this.currentPage=resp.data.currentPage;
+                    this.pageSize=resp.data.pageSize;
+                });
+            },
+            menuClick(tab) {
+                // console.log(tab.name);
+                this.goodsType = tab.name;
+                this.goodsTypeName = tab.label;
+                this.product.category = this.goodsType;
+                this.selectAll();
+            },
+            myAccount() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/myAccount.html";
+                    window.open("/nanyu-onlinestore/myAccount.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myCart() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/cart.html";
+                    window.open("/nanyu-onlinestore/cart.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/myOrder.html";
+                    window.open("/nanyu-onlinestore/myOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            editMyInformation() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/edit.html";
+                    window.open("/nanyu-onlinestore/edit.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            quit() {
+                if (this.user.username !== "") {
+                    this.$confirm('此操作将退出登录, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        axios({
+                            method: "get",
+                            url: "/nanyu-onlinestore/user/quit",
+                        }).then(resp => {
+                            if (resp.data === "success") {
+                                // 重新查询数据
+                                this.selectByRandom();
+                                this.userName = "亲，请登录";
+                                this.user.username = "";
+                                this.$message({
+                                    message: '恭喜你，退出登录成功',
+                                    type: 'success'
+                                });
+                            }
+                        });
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消退出登录'
+                        });
+                    });
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            //分页
+            handleSizeChange(val) {
+                // console.log(`每页 ${val} 条`);
+                this.pageSize = val;
+                this.selectAll();
+            },
+            handleCurrentChange(val) {
+                // console.log(`当前页: ${val}`);
+                this.currentPage = val;
+                this.selectAll();
+
+            },
+            detailOfProduct(id) {
+                // axios({
+                //     method: "post",
+                //     url: "/nanyu-onlinestore/product/detail",
+                //     data: {
+                //         rows: this.products,
+                //         currentPage: this.currentPage,
+                //         pageSize: this.pageSize,
+                //         totalCount: this.totalCount
+                //     }
+                // });
+                // window.location.href = "/nanyu-onlinestore/detail.html?id=" + id;
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/detail.html?id=" + id, "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+
+            selectByCondition() {
+                this.product.category = this.goodsType;
+                this.product.name = this.search;
+                this.selectAll();
+            }
+        },
+
+        data() {
+            return {
+                user: {
+                    id: "",
+                    name: "",
+                    username: ""
+                },
+                // 当前页码
+                currentPage: 1,
+                // 每页显示的条数
+                pageSize: 12,
+                // 总记录数
+                totalCount: 100000,
+                userName:"亲，请登录",
+                goodsType:"",
+                goodsTypeName: "",
+                search: "",
+                select: "",
+                options: [{value: '', label: '全部商品'},
+                    {value: 'food', label: '美食'},
+                    {value: 'drink', label: '饮料'},
+                    {value: 'toy', label: '玩具'},
+                    {value: 'appliances', label: '家电'},
+                    {value: 'kitchenware', label: '厨具'},
+                    {value: 'flower', label: '鲜花'},
+                    {value: 'stationery', label: '文具'},
+                    {value: 'book', label: '图书'},
+                    {value: 'car', label: '汽车'},
+                    {value: 'digital', label: '数码'},
+                    {value: 'phone', label: '手机'},
+                    {value: 'computer', label: '电脑'},
+                    {value: 'backpack', label: '背包'}
+                ],
+                product: {
+                    id: "",
+                    name: "",
+                    price: "",
+                    category: "",
+                    imgurl: ""
+                },
+                products: [
+                ]
+            };
+        }
+    })
+</script>
+
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>我的订单</title>
+    <style>
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-row>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="4">
+            <span style="font-size: 18px;color: cornflowerblue"><i class="el-icon-shopping-cart-full"></i>{{user.name}}的订单</span>
+        </el-col>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="3">
+            <el-button type="danger" plain @click="deleteByIds">批量删除</el-button>
+        </el-col>
+        <el-col :span="13">
+            <el-link></el-link>z`
+        </el-col>
+        <el-col :span="2">
+            <el-dropdown class="grid-content">
+                <el-button type="primary" icon="el-icon-user">
+                    我的<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item icon="el-icon-house" @click.native="myAccount">我的账户</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myCart">购物车</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-search" @click.native="myOrder" disabled>我的订单</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-switch-button" @click.native="quit" disabled>用户退出</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-col>
+
+    </el-row>
+
+    <el-table
+            :data="orders"
+            style="width: 100%;  margin-left: auto; margin-right: auto; "
+            :row-class-name="tableRowClassName"
+            @selection-change="handleSelectionChange">
+        <el-table-column
+                type="selection"
+                width="30">
+        </el-table-column>
+        <el-table-column
+                label="订单号"
+                prop="id">
+        </el-table-column>
+        <el-table-column
+                label="收货人"
+                prop="receiverName">
+        </el-table-column>
+        <el-table-column
+                label="收货地址"
+                prop="receiverAddress">
+        </el-table-column>
+        <el-table-column
+                label="收货电话"
+                prop="receiverPhone">
+        </el-table-column>
+        <el-table-column
+                label="订单时间"
+                prop="orderTime">
+        </el-table-column>
+        <el-table-column
+                label="状态"
+                width="100">
+            <template slot-scope="scope">
+                {{payState(scope.row.payState)}}
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="金额"
+                prop="money"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                align="center"
+                label="操作">
+            <template slot-scope="scope">
+                <el-row>
+                    <el-button type="primary" @click="detailOrder(scope.$index, scope.row)">
+                        {{payOrder(scope.row.payState)}}
+                    </el-button>
+                    <el-button type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                </el-row>
+            </template>
+
+        </el-table-column>
+    </el-table>
+
+
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "get",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "") {
+                    this.selectAll();
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            payState(state) {
+                if (state === 0) {
+                    return "未支付";
+                } else if (state === 1) {
+                    return "已支付";
+                }
+            },
+            payOrder(state) {
+                if (state === 1) {
+                    return "查看";
+                } else if (state === 0) {
+                    return "支付";
+                }
+            },
+            selectAll() {
+                axios({
+                    method: "post",
+                    url: "/nanyu-onlinestore/order/selectByUserId"
+                }).then(resp => {
+                    // 设置表格数据
+                    this.orders=resp.data;
+                });
+            },
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex % 4 === 1) {
+                    return 'warning-row';
+                } else if (rowIndex % 4 === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            // 复选框选中后执行的方法
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            // 查看
+            detailOrder(index, row) {
+                window.location.href = "/nanyu-onlinestore/order.html?id=" + row.id;
+            },
+
+            handleDelete(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/order/deleteById",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            // 批量删除
+            deleteByIds() {
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    for (let i = 0; i < this.multipleSelection.length; i++) {
+                        let selectionElement = this.multipleSelection[i];
+                        this.selectedIds[i] = selectionElement.id;
+                    }
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/order/deleteByIds",
+                        data: this.selectedIds
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            myAccount() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/myAccount.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myCart() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/cart.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/myOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            editMyInformation() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/edit.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+        },
+        data() {
+            return {
+                user: {
+                    id: "",
+                    name: "测试名"
+                },
+                deleteId: -1,
+                order:{
+                },
+                // 复选框选中数据集合
+                multipleSelection: [],
+                // 被选中的id数组
+                selectedIds: [],
+                // 表格数据
+                orders: []
+            };
+        }
+    })
+
+</script>
+
+</body>
+</html>
