@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>管理商品信息</title>
+    <style>
+        .demo-table-expand {
+            font-size: 0;
+        }
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+        .demo-table-expand .el-form-item {
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+    <!--添加数据对话框表单-->
+    <el-dialog
+            title="添加商品"
+            :visible.sync="dialogVisible"
+            width="40%"
+    >
+        <el-form ref="product" :rules="rules" :model="product" label-width="80px" class="demo-ruleForm">
+            <el-form-item label="商品名称" prop="name">
+                <el-input v-model="product.name"></el-input>
+            </el-form-item>
+            <el-form-item label="商品价格" prop="price">
+                <el-input v-model="product.price"></el-input>
+            </el-form-item>
+            <el-form-item label="商品类别" prop="category">
+                <el-select v-model="product.category"  clearable placeholder="请选择">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="商品描述">
+                <el-input v-model="product.description"></el-input>
+            </el-form-item>
+            <el-form-item label="商品数量" prop="pnum">
+                <el-input v-model="product.pnum"></el-input>
+            </el-form-item>
+
+            <el-form-item label="实物图" prop="imgurl">
+                <el-upload
+                        class="upload-demo"
+                        action="/nanyu-onlinestore/fileServlet"
+                        :on-success="handleSuccess"
+                        :before-upload="beforeAvatarUpload"
+                        :file-list="fileList"
+                        :limit="1"
+                        :on-exceed="handleExceed"
+                        list-type="picture">
+                    <el-button size="small" type="primary">点击上传</el-button>
+                    <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                </el-upload>
+            </el-form-item>
+
+            <el-form-item label="状态">
+                <el-switch v-model="product.status"
+                           active-value="1"
+                           inactive-value="0"
+                ></el-switch>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addProduct('product')">提交</el-button>
+                <el-button @click="resetForm('product')">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <el-dialog
+            title="编辑商品"
+            :visible.sync="dialogVisibleEdit"
+            width="40%"
+    >
+        <el-form ref="productEdit" :rules="rules" :model="productEdit" label-width="80px" class="demo-ruleForm">
+            <el-form-item label="商品名称" prop="name">
+                <el-input v-model="productEdit.name"></el-input>
+            </el-form-item>
+            <el-form-item label="商品价格" prop="price">
+                <el-input v-model="productEdit.price"></el-input>
+            </el-form-item>
+            <el-form-item label="商品类别" prop="category">
+                <el-select v-model="productEdit.category"  clearable placeholder="请选择">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="商品描述">
+                <el-input v-model="productEdit.description"></el-input>
+            </el-form-item>
+            <el-form-item label="商品数量" prop="pnum">
+                <el-input v-model="productEdit.pnum"></el-input>
+            </el-form-item>
+
+            <el-form-item label="实物图" prop="imgurl">
+                <el-upload
+                        class="upload-demo"
+                        action="/nanyu-onlinestore/fileServlet"
+                        :on-success="handleSuccessEdit"
+                        :before-upload="beforeAvatarUpload"
+                        :file-list="fileList"
+                        :limit="1"
+                        :on-exceed="handleExceed"
+                        list-type="picture">
+                    <el-button size="small" type="primary">点击上传</el-button>
+                    <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                </el-upload>
+            </el-form-item>
+
+            <el-form-item label="状态">
+                <el-switch v-model="productEdit.status"
+                           :active-value = "1"
+                           :inactive-value = "0"
+                ></el-switch>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="editProduct('productEdit')">提交</el-button>
+                <el-button @click="resetForm('productEdit')">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <el-row>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="4">
+            <span style="font-size: 18px;color: cornflowerblue"><i class="el-icon-shopping-cart-full"></i>{{user.name}}店铺的商品</span>
+        </el-col>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="3">
+            <el-button type="success" plain @click="dialogVisible = true">上架新商品</el-button>
+        </el-col>
+        <el-col :span="2">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="3">
+            <el-button type="danger" plain @click="deleteByIds">批量删除</el-button>
+        </el-col>
+        <el-col :span="8">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="2">
+            <el-dropdown class="grid-content">
+                <el-button type="primary" icon="el-icon-user">
+                    我的店铺<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item icon="el-icon-house" @click.native="myAccount">我的店铺主页</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myProduct" disabled>我的商品</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-search" @click.native="myOrder">查看订单</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-switch-button" @click.native="quit" disabled>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-col>
+
+    </el-row>
+    <el-table
+            :data="products"
+            style="width: 100%"
+            @selection-change="handleSelectionChange">
+        <el-table-column
+                type="selection"
+                width="30">
+        </el-table-column>
+        <el-table-column type="expand" label="详情" width="65">
+            <template slot-scope="props">
+                <el-form label-position="left" inline class="demo-table-expand">
+                    <el-form-item label="商品 ID">
+                        <span>{{ props.row.id }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品名称">
+                        <span>{{ props.row.name }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品状态">
+                        <span>{{statusName(props.row.status)}}</span>
+                    </el-form-item>
+                    <el-form-item label="商品分类">
+                        <span>{{ props.row.categoryName }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品价格">
+                        <span>￥{{ props.row.price }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品剩余">
+                        <span>{{ props.row.pnum }}件</span>
+                    </el-form-item>
+                    <el-form-item label="店铺 ID">
+                        <span>{{ props.row.saleId }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品描述">
+                        <span>{{ props.row.description }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品图片">
+                        <img :src=props.row.imgurl @click="" style="width: 150px"
+                             onerror="this.src='products/error_images.jpg;this.onerror=null'" class="image" alt="">
+                    </el-form-item>
+                </el-form>
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="商品ID"
+                prop="id"
+                width="100"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="上架时间"
+                prop="time"
+                width="200"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="商品名称"
+                prop="name"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="商品价格"
+                prop="price"
+                width="150"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="商品分类"
+                prop="categoryName"
+                width="150"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="店铺 ID"
+                prop="saleId"
+                width="150">
+        </el-table-column>
+        <el-table-column label="数量" prop="pnum" width="100">
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+            <template slot-scope="props">
+                <span>{{statusName(props.row.status)}}</span>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作">
+            <template slot-scope="scope">
+                <el-button
+                        size="mini"
+                        type="primary"
+                        @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+                <el-button
+                        size="mini"
+                        type="danger"
+                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                <el-button
+                        size="mini"
+                        type="warning"
+                        @click="handleTakeDown(scope.$index, scope.row)" :disabled="takeDown(scope.row.status)">下架</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "post",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "" && this.user.role === "adm") {
+                    this.selectAll();
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            statusName(status) {
+                if (status === 0) {
+                    return "已下架";
+                } else {
+                    return "热卖中"
+                }
+            },
+            takeDown(status) {
+                return status === 0;
+            },
+            selectAll() {
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/product/selectAll"
+                }).then(resp => {
+                    // 设置表格数据
+                    this.products = resp.data;
+                });
+            },
+            handleDelete(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/product/delete",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            handleTakeDown(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将下架该商品, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/product/takeDown",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，下架成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            handleEdit(row) {
+                this.productEdit = this.products[row];
+                this.productEdit.imgurl = "";
+                this.dialogVisibleEdit = true;
+            },
+            // 批量删除
+            deleteByIds() {
+                console.log("aaa"+this.fileList)
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 用户点击确认按钮，执行then中逻辑
+                    // 创建id数组[1,2,3]
+                    for (let i = 0; i < this.multipleSelection.length; i++) {
+                        let selectionElement = this.multipleSelection[i];
+                        this.selectedIds[i] = selectionElement.id;
+                    }
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/product/deleteByIds",
+                        data: this.selectedIds
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            addProduct(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.setCategoryName();
+                        axios({
+                            method: "post",
+                            url: "/nanyu-onlinestore/product/add",
+                            data: this.product
+                        }).then(resp => {
+                            if (resp.data === "success") {
+                                this.dialogVisible = false;
+                                this.resetForm('product');
+                                this.selectAll();
+                                this.$message({
+                                    message: '恭喜你，添加成功',
+                                    type: 'success'
+                                });
+                            }
+
+                        });
+
+                    } else {
+                        this.$message.error('表单有误，请继续填写');
+                        return false;
+                    }
+                });
+            },
+            editProduct(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.productEdit.categoryName = this.getCategoryName(this.productEdit.category);
+                        axios({
+                            method: "post",
+                            url: "/nanyu-onlinestore/product/update",
+                            data: this.productEdit
+                        }).then(resp => {
+                            if (resp.data === "success") {
+                                this.dialogVisibleEdit = false;
+                                this.resetForm('productEdit');
+                                this.selectAll();
+                                this.$message({
+                                    message: '恭喜你，修改成功',
+                                    type: 'success'
+                                });
+                            }
+
+                        });
+
+                    } else {
+                        this.$message.error('表单有误，请继续填写');
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            },
+            // 复选框选中后执行的方法
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+                // console.log(this.multipleSelection)
+            },
+            myAccount() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/myAccount.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myProduct() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/sale.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/saleOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            editMyInformation() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/edit.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === "image/jpeg";
+                const isPNG = file.type === "image/png";
+                const isLt3M = file.size / 1024   < 500;
+                if (!isJPG && !isPNG) {
+                    this.$message.error("上传实物图只能是 JPG 格式或 png 格式!");
+                }
+                if (!isLt3M) {
+                    this.$message.error("上传头像图片大小不能超过 500KB!");
+                }
+                return isJPG && isLt3M;
+            },
+            handleExceed(files, fileList) {
+                this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            },
+            handleSuccess(response, file, fileList) {
+                console.log(response);
+                // 服务器上是9，这里是1
+                this.product.imgurl = "products/upload/" + response.split('/')[9] + "/" + file.name;
+                // console.log(this.products.imgurl);
+            },
+            handleSuccessEdit(response, file, fileList) {
+                this.productEdit.imgurl = "products/upload/" + response.split('/')[9] + "/" + file.name;
+            },
+            setCategoryName() {
+                if(this.product.category==="food") this.product.categoryName = "美食";
+                else if(this.product.category==="drink") this.product.categoryName = "饮料";
+                else if(this.product.category==="toy") this.product.categoryName = "玩具";
+                else if(this.product.category==="appliances") this.product.categoryName = "家电";
+                else if(this.product.category==="kitchenware") this.product.categoryName = "厨具";
+                else if(this.product.category==="flower") this.product.categoryName = "鲜花";
+                else if(this.product.category==="stationery") this.product.categoryName = "文具";
+                else if(this.product.category==="book") this.product.categoryName = "图书";
+                else if(this.product.category==="car") this.product.categoryName = "汽车";
+                else if(this.product.category==="digital") this.product.categoryName = "数码";
+                else if(this.product.category==="phone") this.product.categoryName = "手机";
+                else if(this.product.category==="computer") this.product.categoryName = "电脑";
+                else if(this.product.category==="backpack") this.product.categoryName = "背包";
+            },
+
+            getCategoryName(category) {
+                if(category==="food") return "美食";
+                else if(category==="drink") return "饮料";
+                else if(category==="toy") return "玩具";
+                else if(category==="appliances") return "家电";
+                else if(category==="kitchenware") return "厨具";
+                else if(category==="flower") return "鲜花";
+                else if(category==="stationery") return "文具";
+                else if(category==="book") return "图书";
+                else if(category==="car") return "汽车";
+                else if(category==="digital") return "数码";
+                else if(category==="phone") return "手机";
+                else if(category==="computer") return "电脑";
+                else if(category==="backpack") return "背包";
+            }
+
+        },
+
+        data() {
+            return {
+                disabled: "",
+                user:{
+                    id: "",
+                    role: "",
+                    username: "",
+                    name: ""
+                },
+                product:{
+                    name: "",
+                    price: "",
+                    status: "",
+                    category: "",
+                    categoryName: "",
+                    description: "",
+                    pnum: "",
+                    imgurl: ""
+                },
+                productEdit: {
+
+                },
+                dialogVisible: false,
+                dialogVisibleEdit: false,
+                deleteId: "",
+                products: [],
+                // 复选框选中数据集合
+                multipleSelection: [],
+                // 被选中的id数组
+                selectedIds: [],
+                options: [
+                    {value: 'food', label: '美食'},
+                    {value: 'drink', label: '饮料'},
+                    {value: 'toy', label: '玩具'},
+                    {value: 'appliances', label: '家电'},
+                    {value: 'kitchenware', label: '厨具'},
+                    {value: 'flower', label: '鲜花'},
+                    {value: 'stationery', label: '文具'},
+                    {value: 'book', label: '图书'},
+                    {value: 'car', label: '汽车'},
+                    {value: 'digital', label: '数码'},
+                    {value: 'phone', label: '手机'},
+                    {value: 'computer', label: '电脑'},
+                    {value: 'backpack', label: '背包'}],
+                rules: {
+                    name: [
+                        { required: true, message: '请输入商品名称', trigger: 'blur' },
+                    ],
+                    price: [
+                        { required: true, message: '请输入商品价格', trigger: 'blur' },
+                        { pattern: /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/, message: '请输入正确金额格式,可保留两位小数', trigger: 'blur' }
+                    ],
+                    category:[
+                        { required: true, message: '请输入商品类别', trigger: 'change' }
+                    ],
+                    pnum:[
+                        { required: true, message: '请输入可售商品数量'},
+                        { pattern: /^[1-9]\d*$/, message: '数量必须为整数'}
+                    ]
+                },
+                fileList: []
+            }
+        }
+    })
+</script>
+</body>
+</html>

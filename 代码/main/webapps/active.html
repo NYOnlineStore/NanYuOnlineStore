@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>用户激活</title>
+    <style>
+        body {
+            background: url(images/login2.jpeg) no-repeat 0 0;
+        }
+
+        .div-demo {
+            width: 30%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 200px;
+            border: 1px solid rgba(0.1, 0.1, 0.1, 0.3);
+            border-radius: 4px;
+            font-size: 28px;
+            background-color: rgba(75, 81, 95, 0.3);
+            box-shadow: 7px 7px 17px rgba(52, 56, 66, 0.5);
+        }
+
+        .form-demo {
+            margin: 70px 30px auto;
+            width: 80%;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+    <el-form label-width="80px" class="form-demo">
+        <el-form-item>
+            <span slot="label">
+                <span style="color: #f0edf3">激活码</span></span>
+            <el-input v-model="activeCode"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-row>
+                <el-col :span="1">
+                    <el-link href=""></el-link>
+                </el-col>
+                <el-col :span="4">
+                    <el-button type="warning" @click="onSubmit">激活</el-button>
+                </el-col>
+                <el-col :span="4">
+                    <el-link href=""></el-link>
+                </el-col>
+<!--                <el-col :span="4">
+                    <el-link href=""></el-link>
+                </el-col>
+                <el-col :span="4">
+                    <el-link href=""></el-link>
+                </el-col>-->
+                <el-col :span="5">
+                    <el-button size="mini" type="danger" @click.native="resetForm">重置</el-button>
+                </el-col>
+                <el-col :span="5">
+                    <el-button size="mini" type="success" @click.native="register">注册</el-button>
+                </el-col>
+                <el-col :span="5">
+                    <el-button size="mini" type="primary" @click.native="login">登录</el-button>
+                </el-col>
+            </el-row>
+        </el-form-item>
+    </el-form>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+
+        },
+
+        methods: {
+            onSubmit() {
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/user/active?activeCode=" + this.activeCode
+                }).then(resp => {
+                    if (resp.data === "success") {
+                        this.$message({
+                            message: '恭喜你，激活成功',
+                            type: 'success'
+                        });
+                    } else {
+                        this.$message({
+                            message: '对不起，激活码不存在',
+                            type: 'danger'
+                        });
+                    }
+                });
+            },
+            resetForm() {
+                this.activeCode = "";
+            },
+            register() {
+                window.location.href = "/nanyu-onlinestore/register.html";
+            },
+            login() {
+                window.location.href = "/nanyu-onlinestore/login.html";
+            }
+        },
+
+        data() {
+            return {
+                activeCode: "",
+            };
+        }
+    })
+</script>
+</body>
+</html>

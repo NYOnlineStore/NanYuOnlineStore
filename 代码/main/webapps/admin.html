@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>管理员界面</title>
+    <style>
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+            line-height: 50px;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+    <el-container>
+        <el-header>欢迎进入南鱼网上商城管理员界面</el-header>
+        <el-container>
+            <el-main>
+                <el-row>
+                    <el-col :span="24"><el-button type="primary" @click.native="adminUser">管理用户信息</el-button></el-col>
+                </el-row>
+                <el-row>
+
+                    <el-col :span="24"><el-button type="primary" @click.native="adminProduct">管理商品信息</el-button></el-col>
+                </el-row>
+            </el-main>
+        </el-container>
+    </el-container>
+
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "post",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "" && this.user.role === "adm") {
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            adminUser() {
+                window.location.href="/nanyu-onlinestore/adminUser.html"
+            },
+            adminProduct() {
+                window.location.href="/nanyu-onlinestore/adminProduct.html"
+            }
+        },
+
+        data() {
+            return {
+
+            };
+        }
+    })
+</script>
+</body>
+</html>
