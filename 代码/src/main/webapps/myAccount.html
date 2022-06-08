@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>我的账户</title>
+    <style>
+
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+
+    <el-row :style="{ display: show1(user.role)}" >
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="4">
+            <span style="font-size: 18px;color: cornflowerblue"><i class="el-icon-shopping-cart-full"></i>{{user.name}}的主页</span>
+        </el-col>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="2">
+            <el-dropdown class="grid-content">
+                <el-button type="primary" icon="el-icon-user">
+                    我的店铺<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item icon="el-icon-house" @click.native="myAccount" disabled>我的店铺主页</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myProduct">我的商品</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-search" @click.native="myOrder">查看订单</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-switch-button" @click.native="quit">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-col>
+        <el-col :span="14">
+            <el-link></el-link>
+        </el-col>
+    </el-row>
+
+    <el-row :style="{ display: show2(user.role)}" >
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="4">
+            <span style="font-size: 18px;color: cornflowerblue"><i class="el-icon-shopping-cart-full"></i>{{user.name}}的主页</span>
+        </el-col>
+        <el-col :span="1">
+            <el-link></el-link>
+        </el-col>
+        <el-col :span="2">
+            <el-dropdown class="grid-content">
+                <el-button type="primary" icon="el-icon-user">
+                    我的<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item icon="el-icon-house" @click.native="myAccount" disabled>我的账户</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-shopping-cart-full" @click.native="myCart">购物车</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-search" @click.native="myOrder2">我的订单</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-edit-outline" @click.native="editMyInformation">修改个人信息</el-dropdown-item>
+                    <el-dropdown-item icon="el-icon-switch-button" @click.native="quit">用户退出</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-col>
+        <el-col :span="14">
+            <el-link></el-link>
+        </el-col>
+    </el-row>
+
+    <el-form :model="user" status-icon  ref="user" label-width="100px" class="form-demo">
+        <el-form-item label="用户类型">
+            <el-radio-group v-model="user.role" size="medium" disabled>
+                <el-radio-button border label="user">普通用户</el-radio-button>
+                <el-radio-button border label="sale">销售人员</el-radio-button>
+            </el-radio-group>
+        </el-form-item>
+        <el-form-item label="用户名" prop="username">
+            <span>{{user.username}}</span>
+        </el-form-item>
+        <el-form-item :label="name" prop="name">
+            <span>{{user.name}}</span>
+        </el-form-item>
+        <el-form-item label="性别" prop="gender">
+            <span>{{user.gender}}</span>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email" >
+            <span>{{user.email}}</span>
+        </el-form-item>
+        <el-form-item label="电话" prop="telephone">
+            <span>{{user.telephone}}</span>
+        </el-form-item>
+        <el-form-item :label="address" prop="address">
+            <span>{{user.address}}</span>
+        </el-form-item>
+        <el-form-item label="简介" prop="introduce">
+            <span>{{user.introduce}}</span>
+        </el-form-item>
+    </el-form>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "get",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                this.typeChange(this.user.role);
+                if (this.user.username === "") {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            myAccount() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/myAccount.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myProduct() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/sale.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myCart() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/cart.html";
+                    window.open("/nanyu-onlinestore/cart.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder2() {
+                if (this.user.username !== "") {
+                    // window.location.href = "/nanyu-onlinestore/myOrder.html";
+                    window.open("/nanyu-onlinestore/myOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            myOrder() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/saleOrder.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            editMyInformation() {
+                if (this.user.username !== "") {
+                    window.open("/nanyu-onlinestore/edit.html", "_blank");
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            quit() {
+                if (this.user.username !== "") {
+                    this.$confirm('此操作将退出登录, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        axios({
+                            method: "get",
+                            url: "/nanyu-onlinestore/user/quit",
+                        }).then(resp => {
+                            if (resp.data === "success") {
+                                window.location.href="/nanyu-onlinestore/"
+                            }
+                        });
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消退出登录'
+                        });
+                    });
+                } else {
+                    this.$message.error('您还没有登录，请先登录!');
+                }
+            },
+            typeChange(val) {
+                if (val === "user") {
+                    this.name = "昵称";
+                    this.address = "收货地址";
+                } else {
+                    this.name = "商铺名";
+                    this.address = "商铺地址";
+                }
+            },
+            show1(role) {
+                if (role === "sale") {
+                    return "";
+                } else {
+                    return "none";
+                }
+            },
+            show2(role) {
+                if (role === "sale") {
+                    return "none";
+                } else {
+                    return "";
+                }
+            },
+
+        },
+
+        data() {
+            return {
+                name: "昵称",
+                address: "收货地址",
+                user:{}
+            };
+        }
+    })
+</script>
+</body>
+</html>

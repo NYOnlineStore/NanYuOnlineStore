@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>网上商城结算中心</title>
+    <style>
+        .current-demo {
+            border: 1px solid;
+            border-radius: 30px;
+            color: darkorchid;
+        }
+        .breadcrumb-demo {
+            height:40px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 4px;
+            font-size:28px;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 20px;
+            padding-top:20px;
+        }
+        .demo-table-expand {
+            font-size: 0;
+        }
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+        .demo-table-expand .el-form-item {
+            margin-left: 20px;
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+
+        .form-demo {
+            margin: 25px 20px auto;
+            width: 50%;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo" >
+    <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb-demo" style="font-size:20px;" :style="{ display: show1(order.payState) }">
+        <el-breadcrumb-item><a v-bind:href = "indexURL">首页</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a v-bind:href = "cartURL">购物车</a></el-breadcrumb-item>
+        <el-breadcrumb-item><span class="current-demo">结算</span></el-breadcrumb-item>
+        <el-breadcrumb-item>确认</el-breadcrumb-item>
+    </el-breadcrumb>
+    <el-divider></el-divider>
+    <el-row style="width: 100%;  margin-left: 20px; margin-right: auto; " :style="{ display: show1(order.payState) }">
+        <span style="font-size: 18px;color: cornflowerblue">你好，{{name}}！欢迎来到网上商城结算中心</span>
+    </el-row>
+    <el-divider></el-divider>
+
+    <el-table
+            :data="products"
+            style="width: 100%;  margin-left: auto; margin-right: auto; ">
+        <el-table-column type="expand" label="详情" width="65">
+            <template slot-scope="props">
+                <el-form label-position="left" inline class="demo-table-expand">
+                    <el-form-item label="商品名称">
+                        <span>{{ props.row.name }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品状态">
+                        <span>{{ props.row.status }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品分类">
+                        <span>{{ props.row.categoryName }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品价格">
+                        <span>￥{{ props.row.price }}</span>
+                    </el-form-item>
+                    <el-form-item label="小计">
+                        <span>￥{{sumPrice(props.row.price,props.row.pnum)}}</span>
+                    </el-form-item>
+                    <el-form-item label="店铺 ID">
+                        <span>{{ props.row.saleId }}</span>
+                    </el-form-item>
+                    <el-form-item label="店铺名称">
+                        <span>{{ props.row.saleName }}</span>
+                    </el-form-item>
+                    <el-form-item label="店铺地址">
+                        <span>{{ props.row.saleAddress }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品描述">
+                        <span>{{ props.row.description }}</span>
+                    </el-form-item>
+                    <el-form-item label="商品图片">
+                        <img :src=props.row.imgurl @click="" style="width: 150px"
+                             onerror="this.src='products/error_images.jpg;this.onerror=null'" class="image" alt="">
+                    </el-form-item>
+                </el-form>
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="序号"
+                type="index"
+                width="50">
+        </el-table-column>
+        <el-table-column
+                label="商品名称"
+                prop="name">
+        </el-table-column>
+        <el-table-column
+                label="商品价格"
+                prop="price">
+        </el-table-column>
+        <el-table-column
+                label="商品分类"
+                prop="categoryName">
+        </el-table-column>
+        <el-table-column
+                label="描述"
+                prop="description">
+        </el-table-column>
+        <el-table-column
+                label="数量"
+                prop="pnum">
+        </el-table-column>
+        <el-table-column label="小计">
+            <template slot-scope="scope">
+                <span v-model="scope.row.num" ></span>
+            </template>
+            <template slot-scope="scope">
+                <el-row>￥{{sumPrice(scope.row.price,scope.row.pnum)}}</el-row>
+            </template>
+        </el-table-column>
+    </el-table>
+
+
+    <el-form :model="user" status-icon :rules="rules" ref="user" label-width="100px" class="demo-ruleForm form-demo">
+        <el-form-item label="订单号：">
+            <el-row>{{order.id}}</el-row>
+        </el-form-item>
+        <el-form-item label="收货昵称" prop="name">
+        <!--:style="{ display: lookOrder(scope.row.payState) }"-->
+            <el-input v-model="user.name" :style="{ display: show1(order.payState) }"></el-input>
+            <span :style="{ display: show2(order.payState) }">{{order.receiverName}}</span>
+        </el-form-item>
+        <el-form-item label="收货电话" prop="telephone">
+            <el-input v-model="user.telephone" :style="{ display: show1(order.payState) }"></el-input>
+            <span :style="{ display: show2(order.payState) }">{{order.receiverPhone}}</span>
+        </el-form-item>
+        <el-form-item label="收货地址" prop="address">
+            <el-input v-model="user.address" :style="{ display: show1(order.payState) }"></el-input>
+            <span :style="{ display: show2(order.payState) }">{{order.receiverAddress}}</span>
+        </el-form-item>
+        <el-form-item label="合计">
+            <el-row><span style="color: #FF33CC;">￥{{this.order.money}}</span></el-row>
+        </el-form-item>
+        <el-form-item :style="{ display: show1(order.payState) }">
+            <el-row>
+                <el-col :span="2">
+                    <el-link href=""></el-link>
+                </el-col>
+                <el-col :span="4">
+                    <el-button type="success" @click="submitForm('user')">提交订单</el-button>
+                </el-col>
+                <el-col :span="8">
+                    <el-link href=""></el-link>
+                </el-col>
+                <el-col :span="6">
+                    <el-button type="danger" @click="cancel">取消结算</el-button>
+                </el-col>
+            </el-row>
+        </el-form-item>
+    </el-form>
+
+    <el-dialog title="支付界面" :visible.sync="dialogFormVisible">
+        <el-form>
+            <el-form-item label="订单号：">
+                <el-row>{{order.id}}</el-row>
+            </el-form-item>
+            <el-form-item label="收货昵称" prop="name">
+                <el-row>{{user.name}}</el-row>
+            </el-form-item>
+            <el-form-item label="收货电话" prop="telephone">
+                <el-row>{{user.telephone}}</el-row>
+            </el-form-item>
+            <el-form-item label="收货地址" prop="address">
+                <el-row>{{user.address}}</el-row>
+            </el-form-item>
+            <el-form-item label="合计">
+                <el-row><span style="color: #FF33CC;">￥{{this.order.money}}</span></el-row>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="toMyOrder(0)">取 消</el-button>
+            <el-button type="primary" @click="toMyOrder(1)">支付</el-button>
+        </div>
+    </el-dialog>
+
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "get",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                this.name = this.user.name;
+                if (this.user.username !== "") {
+                    // this.cartItem.userId = this.user.id;
+                    // this.selectAll();
+                    let params = new URL(location.href).searchParams;
+                    this.order.id = params.get('id');
+                    if (this.order.id != null && this.order.id !== "") {
+                        this.selectById();
+                    } else {
+                        window.location.href = "/nanyu-onlinestore";
+                    }
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            show1(payState) {
+                if (payState === 0) {
+                    return "";
+                } else {
+                    return "none";
+                }
+            },
+            show2(payState) {
+                if (payState === 0) {
+                    return "none";
+                } else {
+                    return "";
+                }
+            },
+            sumPrice(price, num) {
+                return (price*num).toFixed(2);
+            },
+            selectById() {
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/order/selectPayStateById?id=" + this.order.id,
+                }).then(resp => {
+                    console.log(resp.data);
+                });
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/order/show?id=" + this.order.id,
+                }).then(resp => {
+                    // 设置表格数据
+                    if (resp.data === "failure") {
+                        this.$message({
+                            message: '该账单不存在或不是您本人的，无法查看',
+                            type: 'error'
+                        });
+                        setTimeout(function () {
+                            window.location.href = "/nanyu-onlinestore";
+                        }, 2000);
+                    } else {
+                        this.products = resp.data;
+                        axios({
+                            method: "get",
+                            url: "/nanyu-onlinestore/order/selectById?id=" + this.order.id,
+                        }).then(resp => {
+                            this.order=resp.data;
+                        });
+                    }
+                });
+            },
+            cancel() {
+                window.location.href = "/nanyu-onlinestore/cart.html";
+            },
+            submitForm(user) {
+                this.$refs[user].validate((valid) => {
+                    if (valid) {
+                        axios({
+                            method: "post",
+                            url: "/nanyu-onlinestore/order/update?id=" + this.order.id,
+                            data: this.user
+                        }).then(resp => {
+                            if (resp.data === "success") {
+                                this.$message({
+                                    message: '恭喜你，订单生成成功，正在进入支付页面',
+                                    type: 'success'
+                                });
+                                this.dialogFormVisible = true;
+                            }
+                        });
+                    } else {
+                        this.$message.error('表单有误，请继续填写');
+                        return false;
+                    }
+                });
+            },
+            toMyOrder(flag) {
+                if (flag === 1) {
+                    // 支付成功
+                    axios({
+                        method: "get",
+                        url: "/nanyu-onlinestore/order/pay?id=" + this.order.id,
+                    });
+                }
+                window.location.href="/nanyu-onlinestore/myOrder.html";
+            }
+        },
+
+        data() {
+            var validatePhoneTwo = (rule, value, callback) => {
+                const reg = /^((0\d{2,3}-\d{7,8})|(1[3-9]\d{9}))$/;
+                if (value === '' || value === undefined || value === null) {
+                    callback();
+                } else {
+                    if ((!reg.test(value)) && value !== '') {
+                        callback(new Error('请输入正确的电话号码或者固话号码'));
+                    } else {
+                        callback();
+                    }
+                }
+            };
+            return {
+                name: "",
+                user: {
+                    name: "",
+                    telephone: "",
+                    address: "",
+                },
+                cartItem: {
+                    userId: "",
+                    productId: "",
+                    num: ""
+                },
+                order:{
+                    id: "",
+                    money: "",
+                    receiverName: "",
+                    receiverAddress: "",
+                    receiverPhone: "",
+                    user: {
+                        id: "",
+                        name: "",
+                        address: "",
+                        telephone: ""
+                    },
+                    payState: ""
+                },
+                products: [],
+                rules: {
+                    name: [
+                        {required: true, message: '请输入收货人昵称', trigger: 'blur'},
+                        {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'},
+                    ],
+                    telephone: [
+                        {required: true, message: '请输入收货人手机号或电话', trigger: 'blur'},
+                        {validator: validatePhoneTwo, trigger: 'blur'}
+                    ],
+                    address: [
+                        {required: true, message: '请输入收货人地址', trigger: 'blur'},
+                    ],
+                },
+                dialogFormVisible: false,
+                formLabelWidth: '120px'
+            }
+        }
+    })
+</script>
+</body>
+</html>

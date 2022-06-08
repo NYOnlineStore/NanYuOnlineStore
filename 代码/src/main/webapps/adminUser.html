@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>管理用户信息</title>
+    <style>
+        .demo-table-expand {
+            font-size: 0;
+        }
+        .demo-table-expand label {
+            width: 90px;
+            color: #99a9bf;
+        }
+        .demo-table-expand .el-form-item {
+            margin-right: 0;
+            margin-bottom: 0;
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="div-demo">
+    <el-dialog
+            title="添加商品"
+            :visible.sync="dialogVisible"
+            width="40%"
+    >
+        <el-form :model="userEdit" status-icon  ref="userEdit" label-width="100px" class="form-demo">
+            <el-form-item label="用户类型">
+                <el-radio-group v-model="userEdit.role" size="medium" @change="typeChange">
+                    <el-radio-button border label="user">普通用户</el-radio-button>
+                    <el-radio-button border label="sale">销售人员</el-radio-button>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="用户名" prop="username">
+                <el-input v-model="userEdit.username"></el-input>
+            </el-form-item>
+            <el-form-item label="昵称/店铺名" prop="name">
+                <el-input v-model="userEdit.name"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+                <el-input type="password" v-model="userEdit.password" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="性别" prop="gender">
+                <el-radio-group v-model="userEdit.gender" size="medium">
+                    <el-radio-button border label="男"></el-radio-button>
+                    <el-radio-button border label="女"></el-radio-button>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="userEdit.email"></el-input>
+            </el-form-item>
+            <el-form-item label="电话" prop="telephone">
+                <el-input v-model="userEdit.telephone"></el-input>
+            </el-form-item>
+            <el-form-item label="地址" prop="address">
+                <el-input v-model="userEdit.address"></el-input>
+            </el-form-item>
+            <el-form-item label="简介" prop="introduce">
+                <el-input type="textarea" v-model="userEdit.introduce"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-row>
+                    <el-col :span="2">
+                        <el-link href=""></el-link>
+                    </el-col>
+                    <el-col :span="4">
+                        <el-button type="primary" @click="editUser">修改</el-button>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-link href=""></el-link>
+                    </el-col>
+                    <el-col :span="6">
+                        <el-button type="danger" @click="resetForm('userEdit')">重置</el-button>
+                    </el-col>
+                </el-row>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <el-button type="danger" plain @click="deleteByIds">批量删除</el-button>
+    <el-table
+            :data="users"
+            style="width: 100%"
+            @selection-change="handleSelectionChange">
+        <el-table-column
+                type="selection"
+                width="30">
+        </el-table-column>
+        <el-table-column type="expand" label="详情" width="65">
+            <template slot-scope="props">
+                <el-form label-position="left" inline class="demo-table-expand">
+                    <el-form-item label="用户 ID">
+                        <span>{{ props.row.id }}</span>
+                    </el-form-item>
+                    <el-form-item label="用户名">
+                        <span>{{ props.row.username }}</span>
+                    </el-form-item>
+                    <el-form-item label="类型">
+                        <span>{{ props.row.role }}</span>
+                    </el-form-item>
+                    <el-form-item label="昵称/店铺名">
+                        <span>{{ props.row.name }}</span>
+                    </el-form-item>
+                    <el-form-item label="用户密码">
+                        <span>{{ props.row.password }}</span>
+                    </el-form-item>
+                    <el-form-item label="性别">
+                        <span>{{ props.row.gender }}</span>
+                    </el-form-item>
+                    <el-form-item label="邮箱">
+                        <span>{{ props.row.email }}</span>
+                    </el-form-item>
+                    <el-form-item label="电话">
+                        <span>{{ props.row.telephone }}</span>
+                    </el-form-item>
+                    <el-form-item label="地址">
+                        <span>{{ props.row.address }}</span>
+                    </el-form-item>
+                    <el-form-item label="简介">
+                        <span>{{ props.row.address }}</span>
+                    </el-form-item>
+                    <el-form-item label="激活码">
+                        <span>{{ props.row.activeCode }}</span>
+                    </el-form-item>
+                    <el-form-item label="用户状态">
+                        <span>{{statusName(props.row.state)}}</span>
+                    </el-form-item>
+                    <el-form-item label="注册时间">
+                        <span>{{props.row.registerTime}}</span>
+                    </el-form-item>
+                </el-form>
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="用户ID"
+                prop="id"
+                width="100"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="注册时间"
+                prop="registerTime"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="用户名"
+                prop="username"
+                sortable>
+        </el-table-column>
+        <el-table-column
+                label="密码"
+                prop="password">
+        </el-table-column>
+        <el-table-column
+                label="邮箱"
+                prop="email">
+        </el-table-column>
+        <el-table-column label="状态" width="100">
+            <template slot-scope="props">
+                <span>{{statusName(props.row.state)}}</span>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" width="300">
+            <template slot-scope="scope">
+                <el-button
+                        size="mini"
+                        type="primary"
+                        @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+                <el-button
+                        size="mini"
+                        type="danger"
+                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                <el-button
+                        size="mini"
+                        type="warning"
+                        @click="handleFreeze(scope.$index, scope.row)" :disabled="freeze(scope.row.state)">冻结
+                </el-button>
+                <el-button
+                        size="mini"
+                        type="warning"
+                        @click="handleUnfreeze(scope.$index, scope.row)" :disabled="unfreeze(scope.row.state)">解冻
+                </el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+</div>
+
+<script src="js/axios-0.18.0.js"></script>
+<script src="js/vue.js"></script>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+
+        mounted() {
+            axios({
+                method: "post",
+                url: "/nanyu-onlinestore/user/isLogin"
+            }).then(resp => {
+                this.user = resp.data;
+                if (this.user.username !== "" && this.user.role === "adm") {
+                    this.selectAll();
+                } else {
+                    window.location.href = "/nanyu-onlinestore";
+                }
+            });
+        },
+
+        methods: {
+            statusName(status) {
+                if (status === 0) {
+                    return "未激活";
+                } else if (status === 1) {
+                    return "使用中";
+                } else if (status === 2) {
+                    return "冻结";
+                } else {
+                    return "未知"
+                }
+            },
+            freeze(status) {
+                if(status === 1) return false;
+                else return true;
+            },
+            unfreeze(status) {
+                if(status === 2) return false;
+                else return true;
+            },
+            selectAll() {
+                axios({
+                    method: "get",
+                    url: "/nanyu-onlinestore/user/selectAll"
+                }).then(resp => {
+                    // 设置表格数据
+                    this.users = resp.data;
+                });
+            },
+            handleDelete(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该用户, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/user/deleteById",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            handleFreeze(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将冻结该用户, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/user/freeze",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '冻结成功',
+                                type: 'warning'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            handleUnfreeze(index, row) {
+                // console.log(row.id);
+                // 弹出确认提示框
+                this.$confirm('此操作将解冻该用户, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 获取id
+                    this.deleteId = row.id;
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/user/unfreeze",
+                        data: this.deleteId
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '解冻成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            handleEdit(row) {
+                this.userEdit = this.users[row];
+                this.dialogVisible = true;
+            },
+            // 批量删除
+            deleteByIds() {
+                // 弹出确认提示框
+                this.$confirm('此操作将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    // 用户点击确认按钮，执行then中逻辑
+                    // 创建id数组[1,2,3]
+                    for (let i = 0; i < this.multipleSelection.length; i++) {
+                        let selectionElement = this.multipleSelection[i];
+                        this.selectedIds[i] = selectionElement.id;
+                    }
+                    // 发送ajax请求
+                    axios({
+                        method: "post",
+                        url: "/nanyu-onlinestore/user/deleteByIds",
+                        data: this.selectedIds
+                    }).then(resp => {
+                        if (resp.data === "success") {
+                            // 重新查询数据
+                            this.selectAll();
+                            this.$message({
+                                message: '恭喜你，删除成功',
+                                type: 'success'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            editUser() {
+                axios({
+                    method: "post",
+                    url: "/nanyu-onlinestore/user/update",
+                    data: this.userEdit
+                }).then(resp => {
+                    if (resp.data === "success") {
+                        this.dialogVisible = false;
+                        this.resetForm('userEdit');
+                        this.selectAll();
+                        this.$message({
+                            message: '恭喜你，修改成功',
+                            type: 'success'
+                        });
+                    }
+
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            },
+            // 复选框选中后执行的方法
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+                // console.log(this.multipleSelection)
+            },
+        },
+
+        data() {
+            return {
+                user:{},
+                users: [],
+                disabled: "",
+                userEdit: {},
+                dialogVisible: false,
+                deleteId: "",
+                // 复选框选中数据集合
+                multipleSelection: [],
+                // 被选中的id数组
+                selectedIds: [],
+            };
+        }
+    })
+</script>
+</body>
+</html>
